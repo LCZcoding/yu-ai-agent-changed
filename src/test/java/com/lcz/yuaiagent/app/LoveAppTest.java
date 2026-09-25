@@ -6,24 +6,28 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.UUID;
 
+/**
+ * {@link LoveApp} 的集成测试，验证多轮对话的会话记忆功能。
+ */
 @SpringBootTest
 class LoveAppTest {
 
     @Resource
     private LoveApp loveApp;
 
+    /**
+     * 测试多轮对话：自我介绍 → 身份回忆 → 问题咨询。
+     */
     @Test
     void doChat() {
         String chatId = UUID.randomUUID().toString();
-        // 第一轮
+
         String message = "你好,我是张三";
         String answer = loveApp.doChat(message, chatId);
 
-        // 第二轮
         message = "我是谁";
         answer = loveApp.doChat(message, chatId);
 
-        // 第三轮
         message = "如何脱单";
         answer = loveApp.doChat(message, chatId);
     }
