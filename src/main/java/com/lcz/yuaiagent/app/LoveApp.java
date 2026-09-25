@@ -1,8 +1,11 @@
 package com.lcz.yuaiagent.app;
 
+import com.lcz.yuaiagent.advisor.MyLoggerAdvisor;
+import com.lcz.yuaiagent.advisor.ReReadingAdvisor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
@@ -47,7 +50,11 @@ public class LoveApp {
                 .defaultAdvisors(
                     MessageChatMemoryAdvisor
                             .builder(chatMemory)
-                            .build()
+                            .build(),
+                        // 记录日志，输出聊天内容
+                        new MyLoggerAdvisor()
+                        // 重复阅读用户输入，增强理解
+//                        ,new ReReadingAdvisor()
                 )
                 .build();
     }
@@ -74,7 +81,7 @@ public class LoveApp {
             content = chatResponse.getResult().getOutput().getText();
         }
         // 记录日志，输出聊天内容
-        log.info("content:{}",content);
+        //log.info("content:{}",content);
         // 返回聊天内容
         return content;
     }
