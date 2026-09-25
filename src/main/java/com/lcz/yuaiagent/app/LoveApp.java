@@ -13,6 +13,8 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 /**
  * 恋爱心理专家对话应用。
  *
@@ -78,5 +80,27 @@ public class LoveApp {
         }
 
         return content;
+    }
+
+    record LoveReport(String title, List<String> suggestions) {
+
+    }
+
+    /**
+     * AI恋爱报告，结构化输出
+     *
+     * @param message 用户输入的消息内容
+     * @param chatId  聊天会话的唯一标识符，用于关联历史消息
+     * @return AI 助手的回复内容；如果响应为空则返回 {@code null}
+     */
+    public LoveReport doChatWithReport(String message, String chatId) {
+        LoveReport loveReport = chatClient.prompt()             // 开始构建一次对话请求
+                .system(SYSTEM_PROMPT + "请结构化输出恋爱报告，标题为用户名，内容为建议列表")
+                .user(message)                                      // 设置用户发送的消息内容
+                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, chatId))  // 传入会话 ID，关联历史记忆
+                .call()                                             // 执行同步调用（非流式）
+                .entity(LoveReport.class);                          //  解析响应为 LoveReport 对象
+        //log.info("loveReport: {}", loveReport);
+        return loveReport;
     }
 }
