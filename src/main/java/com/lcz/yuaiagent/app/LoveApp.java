@@ -2,6 +2,7 @@ package com.lcz.yuaiagent.app;
 
 import com.lcz.yuaiagent.advisor.MyLoggerAdvisor;
 import com.lcz.yuaiagent.advisor.ReReadingAdvisor;
+import com.lcz.yuaiagent.chatmemory.FileBasedChatMemory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -40,12 +41,22 @@ public class LoveApp {
      * @param dashScopeChatModel 底层大语言模型（通义千问 DashScope）
      */
     public LoveApp(ChatModel dashScopeChatModel) {
-        // 创建基于内存的会话记忆，最多保留最近 10 条消息
+        //  初始化基于文件的会话记忆
+        String fileDir = System.getProperty("user.dir") + "/tmp/chat-memory";
+
+
+        // 创建基于文件的会话记忆，最多保留最近 10 条消息
         ChatMemory chatMemory = MessageWindowChatMemory
                 .builder()                                          // 创建 MessageWindowChatMemory 构建器
-                .chatMemoryRepository(new InMemoryChatMemoryRepository())  // 设置内存存储仓库
+                .chatMemoryRepository(new FileBasedChatMemory(fileDir))  // 设置file存储仓库
                 .maxMessages(10)                                    // 设置最大保留消息数
-                .build();                                           // 构建 ChatMemory 实例
+                .build();
+//        // 创建基于内存的会话记忆，最多保留最近 10 条消息
+//        ChatMemory chatMemory = MessageWindowChatMemory
+//                .builder()                                          // 创建 MessageWindowChatMemory 构建器
+//                .chatMemoryRepository(new InMemoryChatMemoryRepository())  // 设置内存存储仓库
+//                .maxMessages(10)                                    // 设置最大保留消息数
+//                .build();                                           // 构建 ChatMemory 实例
 
         // 创建对话客户端
         chatClient = ChatClient.builder(dashScopeChatModel)         // 指定底层大模型
