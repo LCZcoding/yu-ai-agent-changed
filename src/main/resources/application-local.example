@@ -11,3 +11,14 @@ spring:
       base-url: http://localhost:11434
       chat:
         model: qwen3.5
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        dimensions: 1024
+        distance-type: COSINE_DISTANCE
+        max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/yu_ai_agent
+    username: 改为你的用户名
+    password: 改为你的密码
