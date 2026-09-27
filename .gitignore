@@ -1,6 +1,7 @@
 application-local.yml
 tmp/
-wiki/*
+src/main/resources/wiki/**
+!src/main/resources/wiki/.gitkeep
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
