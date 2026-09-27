@@ -42,4 +42,12 @@ class LoveAppTest {
         Assertions.assertNotNull(loveReport);
 
     }
+
+    @Test
+    void doChatWithRag() {
+        String chatId = UUID.randomUUID().toString();
+        String message = "我单身，如何脱单？";
+        String answer = loveApp.doChatWithRag(message, chatId);
+        Assertions.assertNotNull(answer);
+    }
 }

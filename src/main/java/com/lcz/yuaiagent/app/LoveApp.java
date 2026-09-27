@@ -3,13 +3,16 @@ package com.lcz.yuaiagent.app;
 import com.lcz.yuaiagent.advisor.MyLoggerAdvisor;
 import com.lcz.yuaiagent.advisor.ReReadingAdvisor;
 import com.lcz.yuaiagent.chatmemory.FileBasedChatMemory;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -112,4 +115,19 @@ public class LoveApp {
         //log.info("loveReport: {}", loveReport);
         return loveReport;
     }
+    @Resource
+    private VectorStore loveAppVectorStore;
+
+    public String doChatWithRag(String message, String chatId){
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(QuestionAnswerAdvisor.builder(loveAppVectorStore).build())
+                .call()
+                .chatResponse();
+        String content = chatResponse.getResult().getOutput().getText();
+        return content;
+    }
+
+
 }
