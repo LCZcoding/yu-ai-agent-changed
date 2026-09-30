@@ -12,6 +12,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
@@ -117,7 +118,7 @@ public class LoveApp {
         //log.info("loveReport: {}", loveReport);
         return loveReport;
     }
-    @Autowired(required = false)
+    @Autowired(required = false)//todo  后续再配置
     private VectorStore loveAppVectorStore;
 
     public String doChatWithRag(String message, String chatId){
@@ -131,5 +132,21 @@ public class LoveApp {
         return content;
     }
 
+    @Resource
+    private ToolCallback[] allTools;
+
+    public String doChatWithTools(String message, String chatId){
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                //.advisors(new MyLoggerAdvisor())
+                //.tools(allTools).tools() 的语义是：接收"原始工具对象"（带 @Tool 注解的类），然后内部再次扫描 @Tool 方法。
+                // 而allTools内都是自动包装好的对象，已经没有了@Tool 注解
+                .toolCallbacks(allTools)
+                .call()
+                .chatResponse();
+        String content = chatResponse.getResult().getOutput().getText();
+        return content;
+    }
 
 }

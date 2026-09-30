@@ -20,6 +20,7 @@ public class WebSearchTool {
         this.tavilyApiKey = tavilyApiKey;
     }
 
+    // 网络搜索，只能通过关键词搜索，而不是网址
     @Tool(description = "Search the web for the given query")
     public String searchWeb ( @ToolParam(description = "Search query keyword") String query) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
