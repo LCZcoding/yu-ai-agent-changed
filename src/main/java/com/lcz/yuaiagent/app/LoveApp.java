@@ -15,6 +15,8 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.List;
 
 /**
@@ -115,7 +117,7 @@ public class LoveApp {
         //log.info("loveReport: {}", loveReport);
         return loveReport;
     }
-    @Resource
+    @Autowired(required = false)
     private VectorStore loveAppVectorStore;
 
     public String doChatWithRag(String message, String chatId){
