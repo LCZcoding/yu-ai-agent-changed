@@ -24,6 +24,8 @@ public class ToolRegistration {
         ResourceDownloadTool resourceDownloadTool = new ResourceDownloadTool();
         TerminalOperationTool terminalOperationTool = new TerminalOperationTool();
         PDFGenerationTool pdfGenerationTool = new PDFGenerationTool();
+        DateTimeTool dateTimeTool = new DateTimeTool();
+
         // ToolCallbacks.from() 会扫描每个传入对象的 @Tool 方法，为每个方法创建一个 MethodToolCallback 对象
         return ToolCallbacks.from( // 适配器 将所有工具适配为 ToolCallback[] 类型
             fileOperationTool,
@@ -31,7 +33,8 @@ public class ToolRegistration {
             webScrapingTool,
             resourceDownloadTool,
             terminalOperationTool,
-            pdfGenerationTool
+            pdfGenerationTool,
+            dateTimeTool
         );
     }
 }

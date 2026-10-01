@@ -23,4 +23,9 @@ springdoc:
 knife4j:
   enable: true
   setting:
-    language: zh_cn
+    language:
+# 开启工具debug模式
+logging:
+  level:
+    org.springframework.ai: DEBUG
+
