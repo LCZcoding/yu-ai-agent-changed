@@ -1,3 +1,5 @@
+mcp_servers.json
+
 application-local.yml
 tmp/
 src/main/resources/wiki/**
