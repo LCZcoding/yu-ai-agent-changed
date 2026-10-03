@@ -13,6 +13,7 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
@@ -30,10 +31,14 @@ import java.util.List;
 @Slf4j
 public class LoveApp {
 
-    /** 对话客户端，封装了系统提示词、会话记忆以及底层大模型调用。 */
+    /**
+     * 对话客户端，封装了系统提示词、会话记忆以及底层大模型调用。
+     */
     private final ChatClient chatClient;
 
-    /** 系统提示词：定义 AI 的角色身份、提问策略及引导方式。 */
+    /**
+     * 系统提示词：定义 AI 的角色身份、提问策略及引导方式。
+     */
     private static final String SYSTEM_PROMPT = "扮演深耕恋爱心理领域的专家。开场向用户表明身份，告知用户可倾诉恋爱难题。" +
             "围绕单身、恋爱、已婚三种状态提问：单身状态询问社交圈拓展及追求心仪对象的困扰；" +
             "恋爱状态询问沟通、习惯差异引发的矛盾；已婚状态询问家庭责任与亲属关系处理的问题。" +
@@ -66,10 +71,10 @@ public class LoveApp {
         chatClient = ChatClient.builder(dashScopeChatModel)         // 指定底层大模型
                 .defaultSystem(SYSTEM_PROMPT)                       // 设置系统提示词，定义 AI 角色和行为
                 .defaultAdvisors(
-                    MessageChatMemoryAdvisor
-                            .builder(chatMemory)                    // 传入记忆对象，自动附加历史消息
-                            .build(),
-                    new MyLoggerAdvisor()
+                        MessageChatMemoryAdvisor
+                                .builder(chatMemory)                    // 传入记忆对象，自动附加历史消息
+                                .build(),
+                        new MyLoggerAdvisor()
 //                        ,new ReReadingAdvisor()
                 )
                 .build();                                           // 构建 ChatClient 实例
@@ -118,10 +123,11 @@ public class LoveApp {
         //log.info("loveReport: {}", loveReport);
         return loveReport;
     }
+
     @Autowired(required = false)//todo  后续再配置
     private VectorStore loveAppVectorStore;
 
-    public String doChatWithRag(String message, String chatId){
+    public String doChatWithRag(String message, String chatId) {
         ChatResponse chatResponse = chatClient.prompt()
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
@@ -135,7 +141,7 @@ public class LoveApp {
     @Resource
     private ToolCallback[] allTools;
 
-    public String doChatWithTools(String message, String chatId){
+    public String doChatWithTools(String message, String chatId) {
         ChatResponse chatResponse = chatClient.prompt()
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
@@ -149,4 +155,19 @@ public class LoveApp {
         return content;
     }
 
+    @Resource
+    private ToolCallbackProvider toolCallbackProvider;
+
+    public String doChatWithMcp(String message, String chatId) {
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .toolCallbacks(toolCallbackProvider)//不确定
+                .call()
+                .chatResponse();
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content: {}", content);
+        return content;
+    }
 }
+
