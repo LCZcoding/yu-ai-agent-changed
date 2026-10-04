@@ -5,9 +5,13 @@ spring:
     active: local
   ai:
     mcp:
-          client:
-            stdio:
-              servers-configuration: classpath:mcp-servers.json
+      client:
+#        stdio:
+#          servers-configuration: classpath:mcp-servers.json
+        sse:
+          connections:
+            server1:
+              url: http://localhost:8127
 
 server:
   port: 8123
