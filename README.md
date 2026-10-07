@@ -16,10 +16,13 @@
 
 下图展示了项目的整体架构：前端 → 后端控制器 → 两大应用（恋爱大师 / 超级智能体）→ 工具系统、记忆存储与外部 AI/数据服务。
 
-> 👉 **交互式架构图**（推荐）：[.archify/architecture-yu-ai-agent-20261007/architecture.html](./.archify/architecture-yu-ai-agent-20261007/architecture.html)
-> 在浏览器中打开可体验深色/浅色主题切换、节点聚焦、缩放与 PNG/SVG 导出。
+> 👉 **交互式架构图**（点击在浏览器中查看渲染效果）：
+> - GitHub 预览：[htmlpreview 渲染](https://htmlpreview.github.io/?https://raw.githubusercontent.com/LCZcoding/yu-ai-agent-changed/master/.archify/architecture-yu-ai-agent-20261007/architecture.html)
+> - 源文件：[.archify/architecture-yu-ai-agent-20261007/architecture.html](./.archify/architecture-yu-ai-agent-20261007/architecture.html)
+>
+> 支持深色/浅色主题切换、节点聚焦、缩放与 PNG/SVG 导出。
 
-<iframe src="./.archify/architecture-yu-ai-agent-20261007/architecture.html" width="100%" height="760" style="border:1px solid #ddd;border-radius:8px;"></iframe>
+<iframe src="https://htmlpreview.github.io/?https://raw.githubusercontent.com/LCZcoding/yu-ai-agent-changed/master/.archify/architecture-yu-ai-agent-20261007/architecture.html" width="100%" height="760" style="border:1px solid #ddd;border-radius:8px;"></iframe>
 
 ---
 
