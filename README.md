@@ -268,4 +268,4 @@ npm run dev
 
 ## License
 
-仅作学习交流使用。
+本项目基于 [MIT License](./LICENSE) 开源，仅作学习交流使用。
