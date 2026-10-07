@@ -18,6 +18,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -169,5 +170,16 @@ public class LoveApp {
         log.info("content: {}", content);
         return content;
     }
+
+    // 流式聊天方法
+    // Flux<String> 是一个异步、非阻塞、可取消、可组合的文本片段流对象，被订阅后，多次发送文本片段
+    public Flux<String> doChatByStream(String message, String chatId) {
+        return chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .stream()// 开启流式模式
+                .content();// 返回文本片段流对象
+    }
+
 }
 
