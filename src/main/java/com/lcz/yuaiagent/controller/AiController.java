@@ -1,6 +1,7 @@
 package com.lcz.yuaiagent.controller;
 
 
+import com.lcz.yuaiagent.agent.ConversationStore;
 import com.lcz.yuaiagent.agent.YuManus;
 import com.lcz.yuaiagent.app.LoveApp;
 import jakarta.annotation.Resource;
@@ -29,6 +30,9 @@ public class AiController {
 
     @Resource
     private ChatModel dashScopeChatModel;
+
+    @Resource
+    private ConversationStore conversationStore;
 
     // 同步
     @GetMapping("/love_app/chat/sync")
@@ -84,10 +88,17 @@ public class AiController {
     /**
      * 流式调用 Manus 超级智能体
      *
+     * @param message 用户输入
+     * @param chatId  会话 ID，用于加载/保存多轮对话记忆
      */
     @GetMapping("/manus/chat")
-    public SseEmitter doChatWithManus(String message) {
+    public SseEmitter doChatWithManus(String message, String chatId) {
         YuManus yuManus = new YuManus(allTools, dashScopeChatModel);// 每次对话都要创建一个新的实例,记忆等的影响
+        // 注入会话记忆能力
+        yuManus.setConversationId(chatId);
+        yuManus.setConversationStore(conversationStore);
+        // 加载该会话的历史消息，实现多轮记忆
+        yuManus.setMessageList(conversationStore.load(chatId));
         return yuManus.runStream(message);
     }
 

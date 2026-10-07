@@ -88,6 +88,8 @@ public class ToolCallAgent extends ReActAgent{
             // 得到需要的助手消息
             AssistantMessage assistantMessage = chatResponse.getResult().getOutput();
             String result = assistantMessage.getText();
+            // 记录本轮思考文本，供 step() 在无工具调用时返回给上层
+            this.lastThought = result;
             // 得到要调用的工具列表信息
             List<AssistantMessage.ToolCall> toolCallList = assistantMessage.getToolCalls();
             // 输出提示信息
@@ -107,6 +109,9 @@ public class ToolCallAgent extends ReActAgent{
             if (toolCallList.isEmpty()) {
                 // 只有不调用工具时，才记录助手消息 ,因为Act阶段调用工具时会自动记录
                 getMessageList().add(assistantMessage);
+                // 模型直接给出了文本回答，视为最终答复，结束执行循环，
+                // 避免重复 think 把模型逼向无关的工具调用
+                this.setState(AgentState.FINISHED);
                 return false;
             } else {
                 // 需要调用工具时，无需记录助手消息，因为Act阶段调用工具时会自动记录
@@ -147,8 +152,36 @@ public class ToolCallAgent extends ReActAgent{
                         .anyMatch(response -> response.name().equals("doTerminate"));
         if(terminateToolCalled){
             this.setState(AgentState.FINISHED);
+            // 工具调用已结束，需要再生成一次最终文本回答返回给用户
+            this.needsFinalAnswer = true;
         }
         log.info(results);
         return results;
+    }
+
+    /**
+     * 工具调用全部结束后，让模型基于已有的工具执行结果生成最终文本回答。
+     * 不带工具选项，确保模型只输出文本不再调用工具。
+     */
+    @Override
+    protected String produceFinalAnswer() {
+        try {
+            // 追加一条引导消息，要求模型直接给出总结
+            getMessageList().add(new UserMessage(
+                    "以上是所有工具的执行结果。请你基于这些结果，直接用中文向用户给出清晰、完整的最终回答，不要调用任何工具。"));
+            Prompt prompt = new Prompt(getMessageList());
+            ChatResponse chatResponse = getChatClient().prompt(prompt)
+                    .system(this.getSystemPrompt())
+                    .call()
+                    .chatResponse();
+            AssistantMessage assistantMessage = chatResponse.getResult().getOutput();
+            String text = assistantMessage.getText();
+            // 将最终回答也记入上下文，便于多轮记忆
+            getMessageList().add(assistantMessage);
+            return text;
+        } catch (Exception e) {
+            log.error("生成最终回答失败: {}", e.getMessage());
+            return null;
+        }
     }
 }

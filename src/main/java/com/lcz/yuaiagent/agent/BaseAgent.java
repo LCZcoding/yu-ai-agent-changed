@@ -53,6 +53,16 @@ public abstract class BaseAgent {
     // 助手回复消息的重复阈值
     private int duplicateThreshold = 3;// 有三条重复消息时确认重复
 
+    // 会话 ID（用于多轮记忆）；未设置则不启用记忆
+    private String conversationId;
+
+    // 会话记忆存储（由外部注入，BaseAgent 不是 Spring Bean，故用 setter 注入）
+    private ConversationStore conversationStore;
+
+    // 工具调用结束后是否需要再生成一次最终文本回答
+    // （模型调用 doTerminate 或达到最大步数时为 true；模型直接文本回答时为 false）
+    protected boolean needsFinalAnswer = false;
+
     /**
      * 运行代理
      * @param userPrompt 用户输入的提示词
@@ -71,6 +81,7 @@ public abstract class BaseAgent {
         }
         // 切换状态为RUNNING
         this.state = AgentState.RUNNING;
+        this.needsFinalAnswer = false;
         // 记录消息上下文
         this.messageList.add(new UserMessage(userPrompt));
         // 结果列表
@@ -89,14 +100,23 @@ public abstract class BaseAgent {
                 if (this.isStuck()) {
                     this.handleStuck();
                 }
-                // 执行结果存储
-                String result = "Step " + stepNumber + ": " + stepResult;
+                // 执行结果存储：直接文本回答不加 Step 前缀，工具执行结果加前缀
+                String result = this.isLastStepFinalAnswer()
+                        ? stepResult
+                        : "Step " + stepNumber + ": " + stepResult;
                 resultList.add(result);
             }
             // 检查是否超出步骤限制,可以用来通知用户
             if (currentStep >= maxSteps) {
                 state = AgentState.FINISHED;
-                resultList.add("Terminated: Reached max steps (" + maxSteps + ")");
+                needsFinalAnswer = true;
+            }
+            // 工具调用结束后，生成最终文本回答
+            if (needsFinalAnswer) {
+                String finalAnswer = this.produceFinalAnswer();
+                if (finalAnswer != null && !finalAnswer.isEmpty()) {
+                    resultList.add(finalAnswer);
+                }
             }
             return String.join("\n", resultList);
         } catch (Exception e) {
@@ -107,6 +127,8 @@ public abstract class BaseAgent {
         } finally {
             // 清理资源
             this.cleanup();
+            // 保存会话记忆
+            this.saveConversation();
         }
     }
 
@@ -137,6 +159,7 @@ public abstract class BaseAgent {
                 }
                 // 切换状态为RUNNING
                 this.state = AgentState.RUNNING;
+                this.needsFinalAnswer = false;
                 // 记录消息上下文
                 this.messageList.add(new UserMessage(userPrompt));
                 // 结果列表
@@ -155,14 +178,23 @@ public abstract class BaseAgent {
                         if (this.isStuck()) {
                             this.handleStuck();
                         }
-                        // 执行结果存储
-                        String result = "Step " + stepNumber + ": " + stepResult;
+                        // 执行结果存储：直接文本回答不加 Step 前缀，工具执行结果加前缀
+                        String result = this.isLastStepFinalAnswer()
+                                ? stepResult
+                                : "Step " + stepNumber + ": " + stepResult;
                         emitter.send(result);
                     }
                     // 检查是否超出步骤限制,可以用来通知用户
                     if (currentStep >= maxSteps) {
                         state = AgentState.FINISHED;
-                        emitter.send("执行结束: 达到最大步骤 (" + maxSteps + ")");
+                        needsFinalAnswer = true;
+                    }
+                    // 工具调用结束后，生成最终文本回答
+                    if (needsFinalAnswer) {
+                        String finalAnswer = this.produceFinalAnswer();
+                        if (finalAnswer != null && !finalAnswer.isEmpty()) {
+                            emitter.send(finalAnswer);
+                        }
                     }
                     // 正常完成
                     emitter.complete();
@@ -180,6 +212,8 @@ public abstract class BaseAgent {
                 } finally {
                     // 清理资源
                     this.cleanup();
+                    // 保存会话记忆
+                    this.saveConversation();
                 }
             } catch (Exception e) {
                 emitter.completeWithError(e);
@@ -265,6 +299,32 @@ public abstract class BaseAgent {
      * @return 步骤执行结果
      */
     public abstract String step();
+
+    /**
+     * 上一步是否为模型直接给出的文本回答（非工具执行）。
+     * 用于决定输出是否加 "Step N:" 前缀。默认 false，ReActAgent 重写。
+     */
+    protected boolean isLastStepFinalAnswer() {
+        return false;
+    }
+
+    /**
+     * 工具调用结束后生成最终文本回答。
+     * 默认返回 null（表示无需总结），ToolCallAgent 重写以调用模型生成总结。
+     */
+    protected String produceFinalAnswer() {
+        return null;
+    }
+
+    /**
+     * 保存当前会话的消息上下文到 ConversationStore（若已设置 conversationId）。
+     */
+    protected void saveConversation() {
+        if (conversationId != null && conversationStore != null) {
+            conversationStore.save(conversationId, messageList);
+            log.info("Conversation saved for chatId={}, messageCount={}", conversationId, messageList.size());
+        }
+    }
 
     /**
      * clean资源
